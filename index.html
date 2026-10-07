@@ -66,6 +66,7 @@ body {
   font-size: 0.95em;
   cursor: pointer;
   color: #334155;
+  transition: all 0.2s ease;
 }
 .tab-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
 
@@ -162,14 +163,16 @@ body {
   font-weight: bold;
   border-radius: 6px;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
 }
-.ctrl-btn:disabled { background: #94a3b8; }
+.ctrl-btn:disabled { background: #94a3b8; cursor: not-allowed; }
 
 .resource-card {
   background: #f8fafc;
   border: 1px solid var(--border);
   border-left: 4px solid var(--primary);
-  padding: 16px;
+  padding: 18px;
   border-radius: 8px;
   margin-bottom: 14px;
   display: flex;
@@ -177,30 +180,91 @@ body {
   align-items: center;
 }
 
-.form-group {
-  margin-bottom: 22px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid #e2e8f0;
+.resource-info { max-width: 75%; }
+.resource-info h4 { margin: 0 0 6px 0; font-size: 1.1em; color: var(--text-dark); }
+.resource-info p { margin: 0; font-size: 0.9em; color: var(--text-muted); line-height: 1.4; }
+
+/* CHECKPOINT FORM STYLES */
+.form-header-box {
+  background: var(--primary-light);
+  border: 1px solid #bbf7d0;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
 }
-label { font-weight: bold; margin-bottom: 6px; display: block; }
-input, textarea, select {
+.form-group {
+  margin-bottom: 24px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.form-group label.question-label {
+  font-weight: 600;
+  font-size: 1.02em;
+  margin-bottom: 12px;
+  display: block;
+  color: var(--text-dark);
+  line-height: 1.4;
+}
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+.option-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: normal;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.option-label:hover {
+  background: #f1f5f9;
+}
+.option-label input[type="radio"],
+.option-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+input[type="text"], input[type="date"], select, textarea {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.95em;
+  box-sizing: border-box;
+  background-color: #ffffff;
 }
+input[type="text"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--primary);
+  border-color: transparent;
+}
+textarea { resize: vertical; }
 
 .submit-btn {
   width: 100%;
   background: var(--primary);
   color: white;
-  padding: 14px;
-  font-size: 1.05em;
+  padding: 16px;
+  font-size: 1.1em;
   font-weight: bold;
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  margin-top: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.08);
 }
+.submit-btn:hover { background: var(--primary-dark); }
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
@@ -209,6 +273,12 @@ input, textarea, select {
 .italic { font-style: italic; }
 .subtitle { color: var(--text-muted); }
 
+@media print {
+  body { padding: 0; background: #fff; }
+  .header-card, .nav-tabs, .bellringer-box, .deck-controls, .submit-btn { display: none !important; }
+  .card { box-shadow: none; border: none; padding: 0; }
+  .form-group { page-break-inside: avoid; border: 1px solid #ccc; margin-bottom: 15px; }
+}
 </style>
 </head>
 <body>
@@ -257,7 +327,7 @@ input, textarea, select {
     </div>
 
     <div id="slide-stage" class="slide-stage">
-      <!-- Slides injected by script.js -->
+      <!-- Slides injected by script -->
     </div>
 
     <div class="deck-controls">
@@ -269,18 +339,19 @@ input, textarea, select {
   <!-- TAB: RESOURCE HUB -->
   <div id="res-tab" class="card tab-content">
     <h3>Lesson Resource & Reference Hub</h3>
-    <p class="muted">Access official course references below.</p>
+    <p class="muted">Access official course readings, maps, and primary sources below.</p>
     <div id="resource-list">
-      <!-- Resources injected by script.js -->
+      <!-- Resources injected by script -->
     </div>
   </div>
 
   <!-- TAB: STUDENT WORK CHECKPOINT -->
   <div id="form-tab" class="card tab-content">
-    <h3>Student Work Checkpoint & Reflection</h3>
+    <h3>Student Work Checkpoint & Reading Comprehension</h3>
+    <p class="muted">Complete all prompts below based on today's reading, <em>"Coming of Age in the Dawnland."</em></p>
     <form id="checkpoint-form" onsubmit="event.preventDefault(); window.print();">
-      <!-- Dynamic form fields injected by script.js -->
-      <button type="submit" class="submit-btn">Print this page and turn into the Red Basket!</button>
+      <!-- Dynamic form fields injected by script -->
+      <button type="submit" class="submit-btn">Print Checkpoint & Turn into Red Basket</button>
     </form>
   </div>
 
@@ -291,17 +362,15 @@ let currentSlide = 1;
 let totalSlides = 1;
 let bellringers = [];
 
-// Stock image pool for default visual slides
 const stockImagePool = [
-  'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80', // Turtle / Nature
-  'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=300&q=80', // Water / Earth-Diver
-  'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=300&q=80', // Ecology / Forest
-  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=300&q=80', // Campfire / Orality
-  'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=300&q=80', // Literature / History
-  'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=300&q=80'  // Writing Workshop
+  'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=300&q=80',
+  'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=300&q=80'
 ];
 
-// Emoji fallback pool
 const iconPool = ['🐢', '🌊', '🌱', '🗣️', '☯️', '📝'];
 
 function renderSlides(slides) {
@@ -313,9 +382,7 @@ function renderSlides(slides) {
     wrapper.className = 'slide' + (index === 0 ? ' active' : '');
     wrapper.id = `slide-${index + 1}`;
 
-    // Priority 1: slide.image OR Stock Web Image
     const imageUrl = slide.image || stockImagePool[index % stockImagePool.length];
-    // Fallback: slide.icon OR Emoji Pool
     const fallbackEmoji = slide.icon || iconPool[index % iconPool.length];
 
     const visualMediaHTML = `
@@ -347,6 +414,7 @@ function renderSlides(slides) {
     stage.appendChild(wrapper);
   });
 }
+
 function initLesson(data) {
   bellringers = data.bellringers || [];
   totalSlides = (data.slides || []).length || 1;
@@ -383,147 +451,139 @@ function renderResources(resources) {
   const container = document.getElementById('resource-list');
   container.innerHTML = '';
 
-  let resourceList = [];
-
-  if (Array.isArray(resources)) {
-    resourceList = resources;
-  } else if (resources && typeof resources === 'object') {
-    if (Array.isArray(resources.buttons)) {
-      resourceList = resources.buttons;
-    } else if (Array.isArray(resources.files)) {
-      resourceList = resources.files;
-    } else if (Array.isArray(resources.items)) {
-      resourceList = resources.items;
-    } else if (resources.file || resources.link || resources.url) {
-      resourceList = [resources];
-    }
-  }
-
-  if (!resourceList.length && resources && typeof resources === 'object' && resources.title && (resources.file || resources.link || resources.url)) {
-    resourceList = [resources];
-  }
+  let resourceList = Array.isArray(resources) ? resources : [];
 
   resourceList.forEach(res => {
     const card = document.createElement('div');
     card.className = 'resource-card';
 
     if (typeof res === 'string') {
-      const cleanText = res.trim();
-      const isFile = /\.(pdf|docx?|pptx?|xlsx?)$/i.test(cleanText);
-      if (!isFile) return;
-
-      const label = cleanText.split('/').pop();
+      const fileName = res.split('/').pop();
       card.innerHTML = `
-        <div>
-          <strong>${label}</strong><br/>
-          <small>Repository file</small>
+        <div class="resource-info">
+          <h4>${fileName}</h4>
+          <p>Course Reference Document</p>
         </div>
-        <a href="${cleanText}" target="_blank" rel="noopener noreferrer" class="ctrl-btn">Open Resource</a>
+        <a href="${res}" target="_blank" rel="noopener noreferrer" class="ctrl-btn">Open Resource</a>
       `;
-      container.appendChild(card);
-      return;
+    } else {
+      const resourceUrl = res.file || res.link || res.url || '#';
+      const resourceTitle = res.title || 'Resource Item';
+      const resourceDescription = res.description || '';
+
+      card.innerHTML = `
+        <div class="resource-info">
+          <h4>${escapeHTML(resourceTitle)}</h4>
+          <p>${escapeHTML(resourceDescription)}</p>
+        </div>
+        ${resourceUrl !== '#' ? `<a href="${resourceUrl}" target="_blank" rel="noopener noreferrer" class="ctrl-btn">Open Resource</a>` : ''}
+      `;
     }
-
-    const resourceUrl = res.file || res.link || res.url || res.href || '#';
-    const resourceTitle = res.title || res.name || res.label || 'Resource Item';
-    const resourceDescription = res.description || res.summary || '';
-    const fileName = resourceUrl && typeof resourceUrl === 'string' ? resourceUrl.split('/').pop() : '';
-
-    card.innerHTML = `
-      <div>
-        <strong>${resourceTitle || fileName || 'Resource Item'}</strong><br/>
-        <small>${resourceDescription}</small>
-      </div>
-      ${resourceUrl && resourceUrl !== '#' ? `<a href="${resourceUrl}" target="_blank" rel="noopener noreferrer" class="ctrl-btn">Open Resource</a>` : ''}
-    `;
     container.appendChild(card);
   });
 }
 
 function escapeHTML(value) {
-  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function renderForm(fields) {
   const form = document.getElementById('checkpoint-form');
-  const submitBtn = form.querySelector('.submit-btn');
   form.innerHTML = '';
 
-  const fieldList = Array.isArray(fields) ? fields : [];
+  // Filter out redundant name/date entries if present in array
+  const questionFields = (fields || []).filter(f => {
+    const id = (f.id || f.field_id || '').toString();
+    return id !== 'student_name' && id !== 'date' && id !== 'student_period';
+  });
 
+  // Render Student Info Header Box
   const nameGroup = document.createElement('div');
-  nameGroup.className = 'form-group';
+  nameGroup.className = 'form-header-box';
   nameGroup.innerHTML = `
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;">
-      <div><label for="student_name">Student Name</label><input type="text" id="student_name" /></div>
-      <div><label for="student_period">Period</label><input type="text" id="student_period" /></div>
-      <div><label for="student_date">Date</label><input type="date" id="student_date" /></div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;">
+      <div>
+        <label for="student_name" style="font-weight:bold;display:block;margin-bottom:6px;">Student Name</label>
+        <input type="text" id="student_name" placeholder="First and Last Name" required />
+      </div>
+      <div>
+        <label for="student_period" style="font-weight:bold;display:block;margin-bottom:6px;">Period</label>
+        <input type="text" id="student_period" placeholder="e.g. 3rd" required />
+      </div>
+      <div>
+        <label for="student_date" style="font-weight:bold;display:block;margin-bottom:6px;">Date</label>
+        <input type="date" id="student_date" required />
+      </div>
     </div>`;
   form.appendChild(nameGroup);
 
-  fieldList.forEach((field, index) => {
+  // Render Questions
+  questionFields.forEach((field, index) => {
     const group = document.createElement('div');
     group.className = 'form-group';
 
     const rawId = field.field_id || field.id || `q${index + 1}`;
-    const text = field.label || field.question || field.prompt || `Question ${index + 1}`;
-    const id = `field_${rawId.toString().replace(/\s+/g, '_').toLowerCase()}`;
-    const req = field.required ? 'required' : '';
+    const qNum = index + 1;
+    const promptText = field.question || field.label || field.prompt || `Question ${qNum}`;
+    const elementId = `field_${rawId.toString().replace(/\s+/g, '_').toLowerCase()}`;
     const options = field.type === 'true_false' ? ['True', 'False'] : (field.options || []);
-    const radios = options.map((o, i) => `<label style="font-weight:normal;"><input type="radio" id="${id}_${i}" name="${id}" value="${escapeHTML(o)}" ${req} style="width:auto;" /> ${escapeHTML(o)}</label>`).join('');
-    const checks = options.map((o, i) => `<label style="font-weight:normal;"><input type="checkbox" id="${id}_${i}" name="${id}" value="${escapeHTML(o)}" style="width:auto;" /> ${escapeHTML(o)}</label>`).join('');
 
-    let labelHTML = `<label for="${id}">${index + 1}. ${escapeHTML(text)}</label>`;
+    let labelHTML = `<label class="question-label" for="${elementId}"><strong>${qNum}.</strong> ${escapeHTML(promptText)}</label>`;
     let inputHTML = '';
 
     switch (field.type) {
       case 'multiple_choice':
       case 'true_false':
-        inputHTML = radios;
+        inputHTML = `<div class="options-container">` +
+          options.map((opt, i) => `
+            <label class="option-label" for="${elementId}_${i}">
+              <input type="radio" id="${elementId}_${i}" name="${elementId}" value="${escapeHTML(opt)}" required />
+              <span>${escapeHTML(opt)}</span>
+            </label>
+          `).join('') + `</div>`;
         break;
+
       case 'checkbox':
       case 'checkbox_group':
       case 'multi_select':
-        inputHTML = checks;
+        inputHTML = `<div class="options-container">` +
+          options.map((opt, i) => `
+            <label class="option-label" for="${elementId}_${i}">
+              <input type="checkbox" id="${elementId}_${i}" name="${elementId}" value="${escapeHTML(opt)}" />
+              <span>${escapeHTML(opt)}</span>
+            </label>
+          `).join('') + `</div>`;
         break;
-      case 'date':
-        inputHTML = `<input type="date" id="${id}" ${req} />`;
-        break;
-      case 'long_text':
-      case 'quote_citation':
-      case 'reflection':
-        inputHTML = `<textarea id="${id}" rows="6" ${req}></textarea>`;
-        break;
-      case 'rating_scale':
-        inputHTML = `<select id="${id}">${options.map(o => `<option>${escapeHTML(o)}</option>`).join('')}</select>`;
-        break;
-      case 'select_rubric':
-        inputHTML = `<select id="${id}"><option>-- Select Rubric Benchmark Level --</option>${options.map(o => `<option>${escapeHTML(o)}</option>`).join('')}</select>`;
-        break;
+
       case 'fill_in_blank':
-      case 'fill_in_the_blank': {
-        const blank = /_{3,}/;
-        if (blank.test(text)) {
-          const inline = `<input type="text" id="${id}" ${req} style="display:inline-block;width:220px;border:none;border-bottom:2px solid var(--text-dark);border-radius:0;padding:2px 6px;" />`;
-          labelHTML = `<label for="${id}">${index + 1}. ${escapeHTML(text).replace(/_{3,}/, inline)}</label>`;
-        } else {
-          inputHTML = `<input type="text" id="${id}" ${req} />`;
-        }
+      case 'fill_in_the_blank':
+        inputHTML = `<input type="text" id="${elementId}" name="${elementId}" placeholder="Type your answer here..." required />`;
         break;
-      }
+
       case 'short_answer':
-        inputHTML = `<textarea id="${id}" rows="3" ${req}></textarea>`;
+        inputHTML = `<textarea id="${elementId}" name="${elementId}" rows="3" placeholder="Type your answer in 1-3 complete sentences..." required></textarea>`;
         break;
+
+      case 'long_text':
+      case 'reflection':
+        inputHTML = `<textarea id="${elementId}" name="${elementId}" rows="5" placeholder="Write your response here..." required></textarea>`;
+        break;
+
       default:
-        inputHTML = `<input type="text" id="${id}" ${req} />`;
+        inputHTML = `<input type="text" id="${elementId}" name="${elementId}" placeholder="Your answer" required />`;
     }
 
-    group.innerHTML = `${labelHTML}${inputHTML}`;
+    group.innerHTML = labelHTML + inputHTML;
     form.appendChild(group);
   });
 
-  if (submitBtn) form.appendChild(submitBtn);
+  const submitBtn = document.createElement('button');
+  submitBtn.type = 'submit';
+  submitBtn.className = 'submit-btn';
+  submitBtn.innerText = 'Print Checkpoint & Turn into Red Basket';
+  form.appendChild(submitBtn);
 }
+
 function switchTab(key) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -539,7 +599,116 @@ function switchTab(key) {
     document.getElementById('form-tab').classList.add('active');
   }
 }
-window.addEventListener('DOMContentLoaded', () => initLesson({"day": 26, "date": "October 7", "subject": "English 11: American Literature", "unit": "Unit 6: Walt Whitman & Simon Pokagon", "topic": "Revisionist Historiography: Charles C. Mann and 1491", "primary_focus": "Re-evaluating pre-contact Indigenous civilizations and environmental management through modern historical scholarship.", "core_objectives": "Synthesizing contemporary scientific findings with early colonial narratives to challenge traditional historical assumptions.", "weekly_standards_focus": ["11.1.6.1", "11.1.9.1"], "bellringers": ["What does the term 'revisionist historiography' mean when applied to historical scholarship?", "How do modern scientific findings in archaeology and ecology challenge early colonial descriptions of Pre-Columbian America?", "Explain the myth of the 'pristine wilderness' in early American literary history.", "Why is it essential to re-evaluate historical assumptions using both primary documents and modern scientific evidence?"], "slides": [{"title": "Defining Revisionist Historiography", "standard": "11.1.9.1", "bullets": ["Revisionist historiography re-examines established historical narratives using new evidence.", "It aims to correct long-standing biases, omissions, and Eurocentric assumptions in history.", "This approach does not alter historical facts, but refines our understanding of past realities."], "callout": "History is an evolving discipline shaped by continuous inquiry and emerging evidence."}, {"title": "Charles C. Mann and 1491", "standard": "11.1.9.1", "bullets": ["Charles C. Mann synthesizes recent findings in science, archaeology, and geography.", "His work reveals that Pre-Columbian Americas were far more populous and complex than previously taught.", "1491 directly challenges Eurocentric myths of sparse, nomadic Indigenous populations."], "callout": "Modern scientific research radically reshapes our understanding of the Americas prior to 1492."}, {"title": "Deconstructing the 'Pristine Wilderness' Myth", "standard": "11.1.6.1", "bullets": ["Colonial literature often depicted the Americas as an untouched, uninhabited wilderness.", "This myth justified European settlement by framing the land as unmanaged and wild.", "Mann demonstrates that Indigenous peoples actively managed, engineered, and reshaped landscapes."], "callout": "The 'pristine wilderness' was actually a managed, human-influenced ecosystem."}, {"title": "Indigenous Environmental Engineering", "standard": "11.1.6.1", "bullets": ["Native societies practiced controlled forestry, terraforming, and sophisticated irrigation systems.", "The Amazonian 'Terra Preta' soil proves large-scale intentional agricultural enhancement.", "Indigenous peoples operated as sophisticated environmental managers rather than passive inhabitants."], "callout": "Pre-contact Indigenous societies actively shaped their environments through advanced science."}, {"title": "Demographic Re-evaluation and Complexity", "standard": "11.1.9.1", "bullets": ["Recent scientific estimates indicate Pre-Columbian populations were significantly higher than once claimed.", "Major urban centers like Cahokia rivaled contemporary European cities in population and governance.", "Disease epidemics following European contact devastated up to 90 percent of Indigenous populations."], "callout": "High demographic estimates expose the catastrophic scope of post-contact epidemics."}, {"title": "Authorial Structure in Modern Informational Text", "standard": "11.1.6.1", "bullets": ["Mann weaves scientific reporting, interviews, and historical narrative together.", "He uses comparative structures to contrast older textbook myths with modern data.", "This multi-disciplinary evidence structure enhances the text's objectivity and ethos."], "callout": "Synthesizing diverse disciplines strengthens persuasive power in revisionist scholarship."}, {"title": "Juxtaposing Colonial Texts and Modern Science", "standard": "11.1.9.1", "bullets": ["Colonial journals (e.g., Plymouth settlers) recorded empty lands cleared by recent disease.", "Settlers mistook these recently depopulated landscapes for empty, ancient wilderness.", "Mann uses modern science to explain the historical context behind early colonial observations."], "callout": "Colonial observers recorded what they saw, but missed the recent demographic catastrophe."}, {"title": "Evaluating Bias in Early National Narratives", "standard": "11.1.6.1", "bullets": ["19th-century historians often promoted narratives that portrayed Indigenous decline as inevitable.", "These literary representations erased Indigenous achievements to support Manifest Destiny.", "Critical reading requires identifying the political motivations behind historical writing."], "callout": "Historical narratives frequently reflect the ideological goals of the era in which they were written."}, {"title": "Rhetorical Strategies in Scientific Nonfiction", "standard": "11.1.6.1", "bullets": ["Mann utilizes precise data, expert testimonials, and vivid narrative scene-setting.", "He avoids emotional sentimentality in favor of rigorous, evidence-based argumentation.", "His tone remains objective while thoroughly dismantling outdated historical dogmas."], "callout": "Objective scientific evidence provides an unassailable foundation for revising historical claims."}, {"title": "Synthesizing Primary Sources and Contemporary Scholarship", "standard": "11.1.9.1", "bullets": ["Scholars must weigh original 17th-century texts against modern scientific discoveries.", "Primary sources reveal historical attitudes; modern research reveals physical realities.", "Combining both perspectives yields a nuanced, multi-dimensional view of early America."], "callout": "True historical literacy requires evaluating primary accounts alongside modern analysis."}, {"title": "Impact on American Literary Studies", "standard": "11.1.9.1", "bullets": ["Recognizing pre-contact complexity enriches our reading of early Indigenous oral literature.", "It forces readers to re-evaluate early colonial captivity and wilderness narratives.", "Literary history expands to include a wider, more accurate pluralism of American voices."], "callout": "Correcting historical context alters how we interpret early American literature."}, {"title": "Day 26 Synthesis & Textual Evaluation", "standard": "11.1.6.1", "bullets": ["Complete the textual analysis questions based on Mann's 1491 excerpts in today's form.", "Identify how Mann builds logical arguments to dismantle traditional myths.", "Prepare to contrast 19th-century democratic poetics with Indigenous political critique tomorrow."], "callout": "Re-evaluating the past allows us to engage with American literature on accurate ground."}], "resources": ["Mann Text excerpts"], "form": [{"id": "student_name", "type": "short_answer", "question": "Student Full Name:", "correct_answer": ""}, {"id": "date", "type": "date", "question": "Date:", "correct_answer": ""}, {"id": 1, "type": "multiple_choice", "question": "What myth regarding Pre-Columbian America does Charles C. Mann directly challenge in 1491?", "options": ["The myth that Europeans never settled in New England", "The myth that the Americas were an untouched, sparsely populated pristine wilderness", "The myth that Indigenous peoples spoke a single universal language", "The myth that early colonial settlements were economically successful immediately"], "correct_answer": "The myth that the Americas were an untouched, sparsely populated pristine wilderness"}, {"id": 2, "type": "multiple_choice", "question": "What evidence does Mann highlight to prove advanced Indigenous environmental management in the Amazon?", "options": ["Surviving European maps from the 1400s", "Rich, human-engineered fertile soil known as 'Terra Preta'", "Stone castles constructed along coastlines", "Iron mining tools discovered in deep caves"], "correct_answer": "Rich, human-engineered fertile soil known as 'Terra Preta'"}, {"id": 3, "type": "true_false", "question": "Revisionist historiography alters fundamental historical facts to create fictional narratives.", "correct_answer": "False"}, {"id": 4, "type": "short_answer", "question": "Why did early European colonists mistake depopulated Indigenous lands for an empty, untamed wilderness?", "correct_answer": "Prior European disease epidemics had recently wiped out up to 90% of Native populations, leaving newly abandoned, managed landscapes."}, {"id": 5, "type": "multiple_choice", "question": "Which ancient Mississippian Indigenous urban center rivaled contemporary European cities in scale and population?", "options": ["Tenochtitlan", "Cahokia", "Machu Picchu", "Pueblo Bonito"], "correct_answer": "Cahokia"}, {"id": 6, "type": "fill_in_blank", "question": "Mann uses modern scientific disciplines like ecology and archaeology to dismantle ________ assumptions in early American history.", "correct_answer": "Eurocentric"}, {"id": 7, "type": "true_false", "question": "Colonial journals from the 1600s provide completely objective, scientifically accurate depictions of pre-contact Native life.", "correct_answer": "False"}, {"id": 8, "type": "short_answer", "question": "How does Mann's multi-disciplinary approach (combining archaeology, ecology, and history) enhance his text's rhetorical ethos?", "correct_answer": "By relying on diverse scientific evidence and expert research, Mann establishes strong academic authority and objective credibility."}, {"id": 9, "type": "multiple_choice", "question": "How did 19th-century depictions of Indigenous populations as 'vanishing' support political ideologies of that era?", "options": ["They justified territorial expansion and Manifest Destiny as natural and inevitable", "They encouraged immediate European disarmament", "They promoted equal voting rights for all residents", "They prevented westward migration across the Mississippi"], "correct_answer": "They justified territorial expansion and Manifest Destiny as natural and inevitable"}, {"id": 10, "type": "reflection", "question": "How does reading Mann's revisionist scholarship change your understanding of early American literature written by European colonists?", "correct_answer": "Student reflections will vary but should articulate a realization that early colonial literature was written in the wake of demographic collapse and environmental misunderstanding."}]}));
+
+window.addEventListener('DOMContentLoaded', () => initLesson({
+  "day": 26,
+  "date": "October 7",
+  "subject": "English 11: American Literature",
+  "unit": "Unit 6: Walt Whitman & Simon Pokagon",
+  "topic": "Revisionist Historiography: Charles C. Mann and 1491",
+  "primary_focus": "Re-evaluating pre-contact Indigenous civilizations and environmental management through modern historical scholarship.",
+  "core_objectives": "Synthesizing contemporary scientific findings with early colonial narratives to challenge traditional historical assumptions.",
+  "weekly_standards_focus": ["11.1.6.1", "11.1.9.1"],
+  "bellringers": [
+    "What does the term 'revisionist historiography' mean when applied to historical scholarship?",
+    "How do modern scientific findings in archaeology and ecology challenge early colonial descriptions of Pre-Columbian America?",
+    "Explain the myth of the 'pristine wilderness' in early American literary history.",
+    "Why is it essential to re-evaluate historical assumptions using both primary documents and modern scientific evidence?"
+  ],
+  "slides": [
+    {"title": "Defining Revisionist Historiography", "standard": "11.1.9.1", "bullets": ["Revisionist historiography re-examines established historical narratives using new evidence.", "It aims to correct long-standing biases, omissions, and Eurocentric assumptions in history.", "This approach does not alter historical facts, but refines our understanding of past realities."], "callout": "History is an evolving discipline shaped by continuous inquiry and emerging evidence."},
+    {"title": "Charles C. Mann and 1491", "standard": "11.1.9.1", "bullets": ["Charles C. Mann synthesizes recent findings in science, archaeology, and geography.", "His work reveals that Pre-Columbian Americas were far more populous and complex than previously taught.", "1491 directly challenges Eurocentric myths of sparse, nomadic Indigenous populations."], "callout": "Modern scientific research radically reshapes our understanding of the Americas prior to 1492."},
+    {"title": "Deconstructing the 'Pristine Wilderness' Myth", "standard": "11.1.6.1", "bullets": ["Colonial literature often depicted the Americas as an untouched, uninhabited wilderness.", "This myth justified European settlement by framing the land as unmanaged and wild.", "Mann demonstrates that Indigenous peoples actively managed, engineered, and reshaped landscapes."], "callout": "The 'pristine wilderness' was actually a managed, human-influenced ecosystem."},
+    {"title": "Indigenous Environmental Engineering", "standard": "11.1.6.1", "bullets": ["Native societies practiced controlled forestry, terraforming, and sophisticated irrigation systems.", "The Amazonian 'Terra Preta' soil proves large-scale intentional agricultural enhancement.", "Indigenous peoples operated as sophisticated environmental managers rather than passive inhabitants."], "callout": "Pre-contact Indigenous societies actively shaped their environments through advanced science."},
+    {"title": "Demographic Re-evaluation and Complexity", "standard": "11.1.9.1", "bullets": ["Recent scientific estimates indicate Pre-Columbian populations were significantly higher than once claimed.", "Major urban centers like Cahokia rivaled contemporary European cities in population and governance.", "Disease epidemics following European contact devastated up to 90 percent of Indigenous populations."], "callout": "High demographic estimates expose the catastrophic scope of post-contact epidemics."},
+    {"title": "Authorial Structure in Modern Informational Text", "standard": "11.1.6.1", "bullets": ["Mann weaves scientific reporting, interviews, and historical narrative together.", "He uses comparative structures to contrast older textbook myths with modern data.", "This multi-disciplinary evidence structure enhances the text's objectivity and ethos."], "callout": "Synthesizing diverse disciplines strengthens persuasive power in revisionist scholarship."},
+    {"title": "Juxtaposing Colonial Texts and Modern Science", "standard": "11.1.9.1", "bullets": ["Colonial journals (e.g., Plymouth settlers) recorded empty lands cleared by recent disease.", "Settlers mistook these recently depopulated landscapes for empty, ancient wilderness.", "Mann uses modern science to explain the historical context behind early colonial observations."], "callout": "Colonial observers recorded what they saw, but missed the recent demographic catastrophe."},
+    {"title": "Evaluating Bias in Early National Narratives", "standard": "11.1.6.1", "bullets": ["19th-century historians often promoted narratives that portrayed Indigenous decline as inevitable.", "These literary representations erased Indigenous achievements to support Manifest Destiny.", "Critical reading requires identifying the political motivations behind historical writing."], "callout": "Historical narratives frequently reflect the ideological goals of the era in which they were written."},
+    {"title": "Rhetorical Strategies in Scientific Nonfiction", "standard": "11.1.6.1", "bullets": ["Mann utilizes precise data, expert testimonials, and vivid narrative scene-setting.", "He avoids emotional sentimentality in favor of rigorous, evidence-based argumentation.", "His tone remains objective while thoroughly dismantling outdated historical dogmas."], "callout": "Objective scientific evidence provides an unassailable foundation for revising historical claims."},
+    {"title": "Synthesizing Primary Sources and Contemporary Scholarship", "standard": "11.1.9.1", "bullets": ["Scholars must weigh original 17th-century texts against modern scientific discoveries.", "Primary sources reveal historical attitudes; modern research reveals physical realities.", "Combining both perspectives yields a nuanced, multi-dimensional view of early America."], "callout": "True historical literacy requires evaluating primary accounts alongside modern analysis."},
+    {"title": "Impact on American Literary Studies", "standard": "11.1.9.1", "bullets": ["Recognizing pre-contact complexity enriches our reading of early Indigenous oral literature.", "It forces readers to re-evaluate early colonial captivity and wilderness narratives.", "Literary history expands to include a wider, more accurate pluralism of American voices."], "callout": "Correcting historical context alters how we interpret early American literature."},
+    {"title": "Day 26 Synthesis & Textual Evaluation", "standard": "11.1.6.1", "bullets": ["Complete the textual analysis questions based on Mann's 1491 excerpts in today's form.", "Identify how Mann builds logical arguments to dismantle traditional myths.", "Prepare to contrast 19th-century democratic poetics with Indigenous political critique tomorrow."], "callout": "Re-evaluating the past allows us to engage with American literature on accurate ground."}
+  ],
+  "resources": [
+    {
+      "title": "Coming of Age in the Dawnland — Charles C. Mann (1491)",
+      "file": "coming_of_age_in_the_dawland.pdf",
+      "description": "Excerpt from 1491: New Revelations of the Americas Before Columbus. Explores Tisquantum, Patuxet citizenship, and Wampanoag society before European settlement."
+    }
+  ],
+  "form": [
+    {
+      "id": "q1",
+      "type": "multiple_choice",
+      "question": "In Wampanoag culture, what did the name 'Tisquantum' actually refer to?",
+      "options": [
+        "A peaceful mediator between tribes",
+        "Rage, specifically the rage of manitou (spiritual power)",
+        "A master hunter of the coastal forests",
+        "A traditional harvest song"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "multiple_choice",
+      "question": "According to Mann, why did Tisquantum adopt and project the nickname 'Tisquantum' when meeting European settlers?",
+      "options": [
+        "It was the standard name given to all translators",
+        "He was asserting power and status, akin to saying 'Hello, I'm the Wrath of God'",
+        "It was his legal birth name given by his family",
+        "The Pilgrims assigned him that sobriquet because they could not pronounce his real name"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "multiple_choice",
+      "question": "Rather than thinking of himself broadly as an 'Indian', Tisquantum regarded himself primarily as a citizen of which shoreline settlement?",
+      "options": [
+        "Massachusett Bay",
+        "Patuxet",
+        "Nauset",
+        "Pokanoket"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "multiple_choice",
+      "question": "Patuxet was part of a tripartite alliance that included which three confederations?",
+      "options": [
+        "Wampanoag, Nauset, and Massachusett",
+        "Iroquois, Huron, and Algonquin",
+        "Pennacook, Nipmuck, and Narragansett",
+        "Cherokee, Creek, and Choctaw"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "true_false",
+      "question": "True or False: Prior to 1620, Native Americans in coastal New England had no prior contact or trade experience with Europeans.",
+      "options": ["True", "False"]
+    },
+    {
+      "id": "q6",
+      "type": "fill_in_blank",
+      "question": "Mann explains that the vocabulary word 'sobriquet' refers to a ________ or nickname.",
+    },
+    {
+      "id": "q7",
+      "type": "short_answer",
+      "question": "Why does Charles C. Mann include the map titled 'Massachusett Alliance, 1600 A.D.' alongside the text? What purpose does it serve for the reader?"
+    },
+    {
+      "id": "q8",
+      "type": "short_answer",
+      "question": "In paragraph 2, Mann notes that calling Tisquantum an 'Indian' is a useful shorthand, but historically inaccurate. Explain how Mann reframes European concepts of Indigenous identity."
+    },
+    {
+      "id": "q9",
+      "type": "reflection",
+      "question": "Synthesis Reflection: How does understanding Tisquantum's true background and political identity challenge traditional textbook myths of the 'friendly Indian' helping Pilgrims?"
+    }
+  ]
+}));
 </script>
 </body>
 </html>
